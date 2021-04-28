@@ -103,15 +103,15 @@
     df.iloc[행 번호]
     df.iloc[행 번호:행 번호-1] # ex df.iloc[2:4] (2행, 3행 선택)
     
-    # 열 정보만 출력
-    df.
+    # 열 정보만 출력 (열만 출력)
+    df.loc[:, ['age','fare']]
     
     # 행,열 정보 출력
     df.iloc[행 번호, [열 번호]] # ex df.iloc[2:4, [2,3]] (2행, 3행 선택)
+    df.iloc[:, range(1,7)] # ex (1 ~ 6행 선택)
     
     # 원소 출력
     df.iloc[행 번호]
-    
     ```
   
   - 원소 선택
@@ -120,17 +120,79 @@
     # 
     ```
   
-  - 행,열 추가
+  - 행 추가, 열 추가 (방법1)
   
-    ```
+    ```python
+    # 열 추가1: 컬럼명 추가 후 일괄적으로 동일한 데이터 입력하는 방법
+    df['열1'] = 열1 모두 들어갈 데이터
+    
+    # 열 추가2: 특정 시리즈를 병합하는 방법
     
     ```
+  
+  - 행 추가, 열 추가 (방법2)
+  
+    ```python
+    # 함수를 만들어서 apply를 이용하여 데이터 변환 후 컬럼을 추가하는 방법
+    def add_two_obj(a, b):
+        return a + b
+    
+    # 시리즈 객체와 숫자에 적용 : 2개의 인수(시리즈 + 숫자)
+    sr2 = df['age'].apply(add_two_obj, b=10)    # a=df['age']의 모든 원소, b=10
+    print(sr2.head())
+    print('\n')
+    >>>
+    0    32.0
+    1    48.0
+    2    36.0
+    3    45.0
+    4    45.0
+    Name: age, dtype: float64
+    
+    ============================================
+    
+    # 람다 함수 활용: 시리즈 객체에 적용
+    def add_10(n):
+        return n + 10
+    
+    sr3 = df['age'].apply(lambda x: add_10(x))  # x=df['age']
+    print(sr3.head())
+    >>>
+    0    32.0
+    1    48.0
+    2    36.0
+    3    45.0
+    4    45.0
+    Name: age, dtype: float64
+            
+    ============================================
+    
+    # 데이터프레임에 applymap()으로 함수를 매핑 적용 (2개 이상의 컬럼명에 동시에 적용)
+    def add_10(n):
+        return n + 10
+    
+    df_map = df.applymap(add_10)   
+    print(df_map.head())
+    >>>
+        age     fare
+    0  32.0  17.2500
+    1  48.0  81.2833
+    2  36.0  17.9250
+    3  45.0  63.1000
+    4  45.0  18.0500
+    ```
+  
+    
   
   - 원소 값 변경
   
   - 행,열 위치 변경
   
   - 행 인덱스 재배열
+  
+    ```
+    df.set_index('이름', inplace=True)
+    ```
   
   - 행 인덱스 정렬, 열 기준 정렬
   
@@ -142,10 +204,19 @@
     df.sort_values('열 이름', ascending=False)
     df.sort_values(by = '열 이름', ascending=False)
     ```
-
-
-
-
+    
+  - 조건에 따른 열 추출
+  
+    ```python
+    # col이라는 열에서 a 데이터를 추출하고 싶을 경우
+    df[df['col'] == 'a']
+    
+    # col이라는 열에서 1 보다 큰 데이터를 추출하고 싶을 경우
+    df[df['col'] > 1]
+    
+    ```
+  
+    
 
 ___
 
@@ -162,6 +233,7 @@ ___
   pd.read_csv('./파일명')
   pd.read_csv('./파일명', header=None)
   pd.read_csv('./파일명', index_col=None)
+  pd.read_csv('./파일명', index_col=0) # Unamed=0 을 제거하고 싶을때 사용
   df4 = pd.read_csv(file_path, index_col='c0')
   print(df4)
   >
@@ -182,6 +254,8 @@ ___
   
   # 5) excel파일(xml) 불러오기
   pd.read_excel('./파일명')
+  pd.read_excel('./파일명', header=None, sheet_name = 1, skiprows=[0,1])
+  
   
   # 6) json파일 불러오기
   pd.read_json('./파일명')
@@ -399,13 +473,76 @@ ___
 
 .. exam7 참조
 
+___
+
 
 
 # Folium
 
-- 
+> Python에서 사용 가능한 라이브러리로서 지도를 다루는 대표적인 라이브러리다. leaflet.js 기반으로 지도를 그려주고, 모바일에서도 쓸 수 있을만큼 가볍다.
 
 
+
+### Folium 만들기
+
+```python
+import folium
+# folium.Map(location=[위도,경도], zoom_start=12)
+
+folium.Map(location=[37.55,126.98], tiles='Stamen Terrain', zoom_start=12)
+folium.Map(location=[37.55,126.98], tiles='Stamen Toner', zoom_start=15)
+```
+
+
+
+### Map 위에 Marker 표시하기
+
+```python
+import pandas as pd
+import folium
+
+# 대학교 리스트를 데이터프레임 변환
+df = pd.read_excel('./data/서울지역 대학교 위치.xlsx')
+df.columns = ['학교명', '위도', '경도']
+print(df.head())
+seoul_map = folium.Map(location=[37.55,126.98], tiles='Stamen Terrain', 
+                        zoom_start=12)
+
+# 대학교 위치정보를 Marker로 표시
+for name, lat, lng in zip(df.학교명, df.위도, df.경도):
+    folium.Marker([lat, lng], popup=name).add_to(seoul_map)
+display(seoul_map)
+
+```
+
+
+
+### Map 위에 CircleMarker로 표시하기
+
+```python
+import pandas as pd
+import folium
+
+for name, lat, lng in zip(df.학교명, df.위도, df.경도):
+    folium.CircleMarker([lat, lng],
+                        radius=10,         # 원의 반지름
+                        color='brown',         # 원의 둘레 색상
+                        fill=True,
+                        fill_color='coral',    # 원을 채우는 색
+                        fill_opacity=0.7, # 투명도    
+                        popup=name
+					    ).add_to(seoul_map)
+    
+display(seoul_map)
+```
+
+
+
+## 단계구분도(Choropleth map)
+
+
+
+___
 
 
 
@@ -465,7 +602,14 @@ ___
 
 - 자료형 변환
 
-  ```
+  ```python
+  # 문자형을 실수형으로 변환
+  df['컬럼명'] = df['컬럼명'].astype('float')
+  
+  # 문자형을 범주형으로 변환
+  
+  # 범주형을 문자열로 변환
+  
   
   ```
 
@@ -561,7 +705,15 @@ ___
 - 데이터프레임 합치기
 
   - 데이터프레임 연결 (concat)
+
   - 데이터프레임 병합 (merge)
+
+    ```
+    
+    ```
+
+    
+
   - 데이터프레임 결합 (join)
 
 - 그룹 연산
@@ -677,8 +829,6 @@ ___
     print(pdf3.xs(('max', 'fare', 0), 
                   level=[0, 1, 2], axis=1))  # max, fare, survived=0인 데이터 선택
     ```
-
-    
 
 - 피벗
 
