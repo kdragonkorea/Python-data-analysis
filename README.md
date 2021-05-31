@@ -48,29 +48,36 @@
   print(sr['생년월일' : '성별'])
   ```
 
-- 데이터프레임
+- **데이터프레임**
   
   - 데이터프레임 만들기
   
     ```python
     import pandas as pd
     
-    # 딕셔너리 (열이름을 key, 리스트를 value)
+    # 방법1: 딕셔너리 (열이름을 key, 리스트를 value)
     dict_data = {'c0':[1,2,3], 'c1':[4,5,6], 'c2':[7,8,9], 'c3':[10,11,12], 
                  'c4':[13,14,15]}
     df = pd.DataFrame(dict_data)
     
-    # 리스트 (행 인덱스/열 이름 지정)
+    # 방법2: 리스트 (행 인덱스/열 이름 지정)
     df = pd.DataFrame([[15, '남', '덕영중'], [17, '여', '수리중']], 
                        index=['준서', '예은'],
                        columns=['나이', '성별', '학교'])
     
-    # 리스트2 (행 인덱스/열 이름 지정)
+    # 방법3: 리스트2 (행 인덱스/열 이름 지정)
     data = (['둘리', 90, 99, 90], ['또치',80, 98, 70], ['도우너', 70, 97, 70], 
             ['희동이', 70, 46, 60])
     index = ['학생1', '학생2', '학생3', '학생4']
     columns = ['name', 'kor', 'eng', 'mat']
     df = pd.DataFrame(data, index, columns)
+    
+    # 방법4: 넘파이 이용 (값: arrary)
+    import numpy as np
+    
+    df = pd.DataFrame(np.array(([1, 2, 3], [4, 5, 6])),
+                      index=['mouse', 'rabbit'],
+                      columns=['one', 'two', 'three'])
     ```
   
   - 행,열 이름 설정/변경
@@ -117,7 +124,10 @@
   - 원소 선택
   
     ```python
-    # 
+    # 원소 1개 선택
+    
+    # 원소 2개 선택
+    df2.iloc[0, 3]
     ```
   
   - 행 추가, 열 추가 (방법1)
@@ -190,7 +200,7 @@
   
   - 행 인덱스 재배열
   
-    ```
+    ```python
     df.set_index('이름', inplace=True)
     ```
   
@@ -697,14 +707,105 @@ ___
   - 열 순서 변경
   - 열 분리
 
-- 필터링
+- 필터링 (exam9)
+
+  - 행, 열 필터링
+
+    ```python
+    # 열이름을 이용하여 필터링
+    df.filter(items=['one', 'three'])
+    >>> 
+    one	three
+    mouse	1	3
+    rabbit	4	6
+    
+    # 열이름의 특정 문자 또는 알파벳으로 끝나는 단어를 찾아서 필터링
+    df.filter(regex='e$', axis=1) # 컬럼명 중에서 e로 끝나는 컬럼을 필터링
+    >>>
+    one	three
+    mouse	1	3
+    rabbit	4	6
+    
+    # 열이름의 특정 문자 또는 알파벳이 포함되는 단어를 찾아서 필터링
+    df.filter(like='e', axis=1) # 열이름 중에서 e가 포함되어 있는 열 기준으로 필터링
+    >>> 
+    one	three
+    mouse	1	3
+    rabbit	4	6
+    
+    # 행이름의 특정 문자 또는 알파벳으로 끝나는 단어를 찾아서 필터링
+    df.filter(regex='t$', axis=0) # 행이름 중에서 t로 끝나는 행을 필터링
+    >>> 
+    one	two	three
+    rabbit	4	5	6
+    
+    # 행이름의 특정 문자 또는 알파벳이 포함되는 단어를 찾아서 필터링
+    df.filter(like='bbi', axis=0) # 행이름 중에서 bbi가 포함되어 있는 행을 필터링
+    >>> 
+    one	two	three
+    rabbit	4	5	6
+    ```
 
   - 불린 인덱싱
+
+    ```python
+    # 열 3개 모두 필터링 해서 보기 (True, True, True)
+    df.loc[:, [True,True,True]]	
+    >>>	one	two	three
+    mouse	1	2	3
+    rabbit	4	5	6
+    
+    # 열 2개(앞에서 2개) 모두 필터링 해서 보기 (True, True, False)
+    df.loc[:, [True,True,False]]	
+    >>>	one	two
+    mouse	1	2
+    rabbit	4	5
+    
+    # 행 2개 모두 필터링 해서 보기 (True, True, True)
+    df.loc[[True,True], :]
+    >>>	one	two	three
+    mouse	1	2	3
+    rabbit	4	5	6
+    
+    # 행 1개(앞에서 1개) 모두 필터링 해서 보기 (True, True, False)
+    df.loc[[True,False], :]
+    >>>	one	two	three
+    mouse	1	2	3
+    
+    # 열의 연산 조건으로 필터링 해서 보기 (<, >, &, |, ==)
+    df.loc[df.one > 2, :] # one의 컬럼값 중에서 2보다 큰 값의 df 출력
+    >>>	one	two	three
+    rabbit	4	5	6
+    
+    # 열의 다중 연산 조건으로 필터링 해서 보기 (<, >, &, |, ==)
+    df.loc[(df.one > 2) & (df.three > 2), :]
+    >>>	one	two	three
+    rabbit	4	5	6
+    ```
+
   - isin() 메소드 활용
 
-- 데이터프레임 합치기
+    ```python
+    #
+    ```
+
+    
+
+- 데이터프레임 합치기 (exam9)
 
   - 데이터프레임 연결 (concat)
+
+    ```python
+    data1 = pd.read_csv('daum_news_title_고령자.csv')
+    data2 = pd.read_csv('daum_news_title_노년층.csv')
+    data3 = pd.read_csv('daum_news_title_노인.csv')
+    data4 = pd.read_csv('daum_news_title_시니어.csv')
+    data5 = pd.read_csv('daum_news_title_어르신.csv')
+    
+    data = pd.concat([data1, data2, data3, data4, data5])
+    ```
+
+    
 
   - 데이터프레임 병합 (merge)
 
@@ -716,7 +817,12 @@ ___
 
   - 데이터프레임 결합 (join)
 
-- 그룹 연산
+    ```
+    ```
+
+    
+
+- 그룹 연산 (exam9)
 
   - 그룹 객체 만들기
 
@@ -896,10 +1002,6 @@ ___
 # 텍스트 분석 및 시각화
 
 ### 형태소 분석기 (konlpy)
-
-|
-|
-|
 
 |       Okt        | Komoran | kkma | Hannanum |
 | :--------------: | :-----: | :--: | :------: |
